@@ -1,0 +1,14 @@
+# Environment files with secrets
+.env
+.env.local
+
+# Generated TLS certificates (dev self-signed certs)
+certs/dev/
+
+# Certbot data (managed volumes — not checked in)
+certbot/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo

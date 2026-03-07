@@ -1,0 +1,23 @@
+# ---- Rate limiting zones -----------------------------------------------------
+# All zones use binary_remote_addr (4 bytes IPv4 / 16 bytes IPv6) to minimise
+# shared memory usage. 10m ~ 160 000 unique IP addresses.
+
+# General API traffic
+limit_req_zone $binary_remote_addr zone=api_per_ip:10m rate=${NGINX_RATE_LIMIT_RATE};
+
+# Stricter zone for authentication endpoints (login, token refresh, etc.)
+limit_req_zone $binary_remote_addr zone=auth:10m rate=${NGINX_RATE_LIMIT_AUTH_RATE};
+
+# Broad zone for all other routes
+limit_req_zone $binary_remote_addr zone=general:10m rate=${NGINX_RATE_LIMIT_GENERAL_RATE};
+
+# Concurrent connection limit per IP
+limit_conn_zone $binary_remote_addr zone=conn_per_ip:10m;
+
+# Log at warning level when limits are hit (visible in error.log)
+limit_req_log_level   warn;
+limit_conn_log_level  warn;
+
+# Default rate-limit response status (429 Too Many Requests)
+limit_req_status   429;
+limit_conn_status  429;
