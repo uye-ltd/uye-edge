@@ -25,6 +25,27 @@ services:
       - edge
     depends_on:
       - go-gateway
+    # Drop all Linux capabilities; add back only what nginx actually needs:
+    #   NET_BIND_SERVICE — bind to privileged ports 80 and 443
+    #   CHOWN           — chown log files to the nginx user at startup
+    #   SETUID / SETGID — master process drops worker privileges to nginx:nginx
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - SETUID
+      - SETGID
+    # Prevent any process inside the container from gaining new privileges
+    # via setuid binaries or file capabilities after startup.
+    security_opt:
+      - no-new-privileges:true
+    # Read-only root filesystem; nginx still needs a handful of writable paths.
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:uid=101,gid=101   # proxy/client-body temp files (nginx uid)
+      - /var/run:uid=101,gid=101           # nginx.pid
+      - /tmp:uid=101,gid=101              # general scratch space
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost/healthz"]
       interval: 30s
